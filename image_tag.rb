@@ -22,11 +22,13 @@ require 'mini_magick'
 module Jekyll
 
   class Image < Liquid::Tag
-
     def initialize(tag_name, markup, tokens)
       @markup = markup
       super
     end
+
+    # Create the found images global variable to later prevent duplicate 'Found' messages
+    $found_images = Array.new;
 
     def render(context)
 
@@ -94,8 +96,15 @@ module Jekyll
       end
 
       generated_src = File.join(site.baseurl, generated_src) unless site.baseurl.empty?
-      # Return the markup!
-      "<img src=\"#{generated_src}\" #{html_attr_string}>"
+
+# Lets you return the URL if you
+      if html_attr.include? 'auto'
+        # Return the markup!
+        return "<img src=\"#{generated_src}\" #{html_attr_string}>"
+      else
+        # Return the url!
+        return generated_src
+      end
     end
 
     def generate_image(instance, site_source, site_dest, image_source, image_dest)
@@ -108,7 +117,8 @@ module Jekyll
 
       image = MiniMagick::Image.open(image_source_path)
       image.coalesce
-      digest = Digest::MD5.hexdigest(image.to_blob).slice!(0..5)
+      digest = Digest::MD5.file image_source_path
+      digest = digest.hexdigest.slice!(0..5)
 
       image_dir = File.dirname(instance[:src])
       ext = File.extname(instance[:src])
@@ -132,40 +142,42 @@ module Jekyll
       else
         orig_height
       end
-      gen_ratio = gen_width/gen_height
 
-      # Don't allow upscaling. If the image is smaller than the requested dimensions, recalculate.
-      if orig_width < gen_width || orig_height < gen_height
-        undersize = true
-        gen_width = if orig_ratio < gen_ratio then orig_width else orig_height * gen_ratio end
-        gen_height = if orig_ratio > gen_ratio then orig_height else orig_width/gen_ratio end
+      crop_width = if instance[:width]
+        instance[:width]
+      else
+        gen_width
+      end
+      crop_height = if instance[:height]
+        instance[:height]
+      else
+        gen_height
       end
 
       gen_name = "#{basename}-#{gen_width.round}x#{gen_height.round}-#{digest}#{ext}"
       gen_dest_dir = File.join(site_dest, image_dest, image_dir)
       gen_dest_file = File.join(gen_dest_dir, gen_name)
 
-      # Generate resized files
-      unless File.exists?(gen_dest_file)
-
-        warn "Warning:".yellow + " #{instance[:src]} is smaller than the requested output file. It will be resized without upscaling." if undersize
-
+      # Generate resized files unless it already exists. 
+     unless File.exists?(gen_dest_file)
         #  If the destination directory doesn't exist, create it
         FileUtils.mkdir_p(gen_dest_dir) unless File.exist?(gen_dest_dir)
 
-        # Let people know their images are being generated
-        puts "Generating #{gen_name}"
+        # Let people know their images are being generated     
+        puts "Generating #{gen_name}" 
+        
 
         # Scale and crop
         image.combine_options do |i|
           i.resize "#{gen_width}x#{gen_height}^"
           i.gravity "center"
-          i.crop "#{gen_width}x#{gen_height}+0+0"
+          i.crop "#{crop_width}x#{crop_height}+0+0"
           i.layers "Optimize"
+          i.repage.+
         end
 
         image.write gen_dest_file
-      end
+     end
 
       # Return path relative to the site root for html
       Pathname.new(File.join('/', image_dest, image_dir, gen_name)).cleanpath
