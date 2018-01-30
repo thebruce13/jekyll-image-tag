@@ -21,15 +21,30 @@ Once you have the requirements installed, copy image_tag.rb into your Jekyll _pl
 There are two parts to Jekyll Image Tag: 
 
 - [Liquid Tag](#liquid-tag)
+- [HTML Tag](#html-tag)
 - [Configuration](#configuration)
 
 ### Liquid Tag
-
+With the auto tag this will run the liquid tag like the original plugin.
 ```
-{% image [preset or WxH] path/to/img.jpg [attr="value"] %}
+{% image auto [preset or WxH] path/to/img.jpg [attr="value"] %}
+```
+Prints as:
+```html
+<img src="path/to/generated/img.jpg" attr="value">
+```
+The tag takes a mix of user input and pointers to configuration settings.
+
+### HTML Tag
+Without the auto tag, this plugin will simply spit out the generated url with no additional attributes.
+```
+<img src="{% image [preset or WxH] path/to/img.jpg %}"> %}
+```
+Prints as:
+```html
+<img src="path/to/generated/img.jpg">
 ```
 
-The tag takes a mix of user input and pointers to configuration settings. 
 
 #### image
 
