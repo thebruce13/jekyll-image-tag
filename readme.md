@@ -12,7 +12,7 @@ I'm not working on many jekyll projects anymore, so have no reason to use this c
 
 ## Installation
 
-Jekyll Image Tag requires [Jekyll](http://jekyllrb.com) `>=1.0`, [Minimagick](https://github.com/minimagick/minimagick) `>=3.6`, and [Imagemagick](http://www.imagemagick.org/script/index.php).
+Jekyll Image Tag requires [Jekyll](http://jekyllrb.com) `>=1.0`, [image_optim](https://github.com/toy/image_optim), [Minimagick](https://github.com/minimagick/minimagick) `>=3.6`, and [Imagemagick](http://www.imagemagick.org/script/index.php).
 
 Once you have the requirements installed, copy image_tag.rb into your Jekyll _plugins folder.
 

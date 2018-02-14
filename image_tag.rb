@@ -18,6 +18,8 @@ require 'fileutils'
 require 'pathname'
 require 'digest/md5'
 require 'mini_magick'
+require 'image_optim'
+require 'image_optim_pack'
 
 module Jekyll
 
@@ -180,16 +182,20 @@ module Jekyll
           i.filter "Triangle"
           i.strip # Remove extra data
 
+          # TODO: check if the alpha channel is used. 
+          # https://stackoverflow.com/questions/2581469/detect-alpha-channel-with-imagemagick
+
           # Get rid of transparency and layer info if its a jpg.
           # This produces a better looking and smaller file.
           if ext.downcase == ".jpg" || ext.downcase == ".jpeg"
             i.layers "Flatten"
-          else
-            i.layers "Optimize"
           end
-        end
 
         image.write gen_dest_file
+
+         # Optimize Image using ImageOptim
+         image_optim = ImageOptim.new(:pngout => false, :allow_lossy=>true)
+         image_optim.optimize_image!(gen_dest_file)
      end
 
       # Return path relative to the site root for html
